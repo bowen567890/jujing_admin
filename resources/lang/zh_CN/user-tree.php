@@ -1,0 +1,37 @@
+<?php 
+return [
+    'labels' => [
+        'UserTree' => '推荐关系管理',
+        'user-tree' => '推荐关系管理',
+    ],
+    'fields' => [
+        'wallet' => '钱包地址',
+        'path' => '推荐路径',
+        'level' => '层级',
+        'code' => '邀请码',
+        'parent_id' => '上级用户',
+        'status' => '状态',
+        'usdt' => 'USDT余额',
+        'rank' => '团队等级',
+        'hold_rank' => '保持等级',
+        'node_rank' => '节点等级',
+        'is_valid' => '有效用户',
+        'zhi_valid' => '直推有效',
+        'static_rate' => '静态收益比率',
+        'zhi_num' => '直推人数',
+        'group_num' => '团队人数',
+        'self_yeji' => '个人业绩',
+        'team_yeji' => '伞下业绩',
+        'total_yeji' => '总业绩',
+        'small_yeji' => '小区业绩',
+        'self_num' => '个人单数',
+        'team_num' => '团队单数',
+        'total_num' => '总单数',
+        'small_num' => '小区单数',
+        'total_income' => '累计挖矿收益',
+        'headimgurl' => '头像',
+        'is_del' => '删除',
+    ],
+    'options' => [
+    ],
+];

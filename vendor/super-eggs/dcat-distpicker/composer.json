@@ -1,0 +1,32 @@
+{
+    "name": "super-eggs/dcat-distpicker",
+    "description": "Distpicker extension for dcat-admin",
+    "alias": "省市区三级联动组件",
+    "type": "library",
+    "keywords": ["dcat-admin", "extension", "distpicker"],
+    "homepage": "https://github.com/super-eggs/dcat-distpicker",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "SuperEggs",
+            "email": "supereggs@88.com"
+        }
+    ],
+    "require": {
+        "php": ">=7.1.0",
+        "dcat/laravel-admin": "~2.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "SuperEggs\\DcatDistpicker\\": "src/"
+        }
+    },
+    "extra": {
+        "dcat-admin": "SuperEggs\\DcatDistpicker\\DcatDistpickerServiceProvider",
+        "laravel": {
+            "providers": [
+                "SuperEggs\\DcatDistpicker\\DcatDistpickerServiceProvider"
+            ]
+        }
+    }
+}
