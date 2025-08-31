@@ -13,9 +13,8 @@ class MyRedis extends Model
         $sleep_time = 10000;    //10毫秒
         $timeoutAt = time() + $timeout; //记录接口超时频率
         while (1) {
-            if (Redis::setnx($key, 1)) {
+            if (Redis::set($key, 1, 'EX', $timeout+1, 'NX')) {
                 //上锁成功
-                Redis::expire($key, $timeout+1);
                 return true;
                 break;
             } else {
@@ -36,9 +35,8 @@ class MyRedis extends Model
      */
     public function setnx_lock($key = '', $timeout = 5, $v = 1)
     {
-        if (Redis::setnx($key, $v)) {
+        if (Redis::set($key, $v, 'EX', $timeout+1, 'NX')) {
             //上锁成功
-            Redis::expire($key, $timeout+1);
             return true;
         }
         return false;

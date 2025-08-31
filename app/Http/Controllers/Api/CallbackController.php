@@ -12,39 +12,22 @@ use App\Models\MyRedis;
 use App\Models\User;
 use App\Models\OrderLog;
 use App\Models\Withdraw;
-use App\Models\Recharge;
 use App\Models\MainCurrency;
 use App\Models\Config;
 use App\Models\UserUsdt;
 use App\Models\RankConfig;
-use App\Models\LockRecord;
-use App\Models\FeeOrder;
-use App\Models\WithdrawFeeOrder;
-use App\Models\LuckyPool;
-use App\Models\PowerOrderLog;
-use App\Models\PowerOrder;
-use App\Models\SyncPower;
 use App\Models\SignOrderLog;
 use App\Models\SignOrder;
-use App\Models\NodePool;
-use App\Models\MerchantOrderLog;
-use App\Models\MerchantOrder;
-use App\Models\PointOrderLog;
-use App\Models\PointOrder;
 use App\Models\EncryptionServiceModel;
-use App\Models\NormalNodeOrderLog;
-use App\Models\NormalNodeOrder;
-use App\Models\SuperNodeOrderLog;
-use App\Models\SuperNodeOrder;
-use App\Models\NodeOrderLog;
-use App\Models\NodeOrder;
-use App\Models\TicketConfig;
-use App\Models\UserTicket;
-use App\Models\NodeConfig;
-use App\Models\TicketOrderLog;
-use App\Models\TicketOrder;
-use App\Models\RechargeLog;
 use App\Models\PoolConfig;
+use App\Models\RegisterOrderLog;
+use App\Models\RegisterOrder;
+use App\Models\UserLockOrder;
+use App\Models\NftConfig;
+use App\Models\UserNft;
+use App\Models\NftOrderLog;
+use App\Models\NftOrder;
+use App\Models\TeamGasConfig;
 
 
 class CallbackController extends Controller
@@ -74,116 +57,28 @@ class CallbackController extends Controller
         $order->content = json_encode($in);
         $order->save();
         
-        //订单类型1余额提币2购买节点3购买入场券4缴纳保证金5余额充值
+        //订单类型1余额提币2注册订单3购买NFT
         if ($order->type==1){
             $this->withdraw($in);
-        }  else if ($order->type==5) {
-            $this->userRecharge($in);
+        }  
+        else if ($order->type==2) {
+            $this->userRegister($in);
         } 
-//         else if ($order->type==2) {
-//             $this->buyNode($in);
-//         } else if ($order->type==3) {
-//             $this->buyTicket($in);
-//         } else if ($order->type==5) {
-//             $this->userRecharge($in);
-//         }
+        else if ($order->type==3) {
+            $this->buyNft($in);
+        } else if ($order->type==4) {
+            $this->signOrder($in);
+        }
         
         return responseValidateError('订单未找到');
     }
     
-    //开通商家
-    private function userRecharge($in)
+    //注册订单
+    private function userRegister($in)
     {
         $ordernum = $in['remarks'];
         
-        $lockKey = 'callback:buyNode:'.$ordernum;
-        $MyRedis = new MyRedis();
-//                                                 $MyRedis->del_lock($lockKey);
-        $ret = $MyRedis->setnx_lock($lockKey, 30);
-        if(!$ret){
-            Log::channel('user_recharge')->info('上锁失败', $in);
-            die;
-        }
-        
-        $order = RechargeLog::query()->where(['ordernum'=>$ordernum, 'status'=>0])->first();
-        if (!$order) {
-            Log::channel('user_recharge')->info('订单不存在', $in);
-            $MyRedis->del_lock($lockKey);
-            die;
-        }
-        
-        if (!isset($in['coin_token']) || $in['coin_token']!='USDT')
-        {
-            Log::channel('user_recharge')->info('币种不正确', $in);
-            $MyRedis->del_lock($lockKey);
-            die;
-        }
-        
-        $hash = isset($in['hash']) && $in['hash'] ? $in['hash'] : '';
-        $amount = @bcadd($in['amount'], '0', 2);
-        
-        //支付类型1USDT(链上)
-        if (bccomp($order->num, $amount, 2)>0) {
-            if ($in['status']==3 && $order->pay_status==0) {
-                Log::channel('user_recharge')->info('金额有误', $in);
-                $order->status = 2;
-                $order->hash = $hash;
-                $order->save();
-                $this->setOrderStatus($ordernum, 2);
-            }
-            $MyRedis->del_lock($lockKey);
-            die;
-        }
-        
-        if ($in['status']==3 && $order->status==0)
-        {
-            
-            DB::beginTransaction();
-            try
-            {
-                $time = time();
-                $datetime = date('Y-m-d H:i:s', $time);
-                
-                $order->status = 1;
-                $order->hash = $hash;
-                $order->save();
-                
-                $Recharge = new Recharge();
-                $Recharge->ordernum = $order->ordernum;
-                $Recharge->user_id = $order->user_id;
-                $Recharge->main_chain = $order->main_chain;
-                $Recharge->coin_type = $order->coin_type;
-                $Recharge->num = $order->num;
-                $Recharge->date = date('Y-m-d');
-                $Recharge->hash = $hash;
-                $Recharge->save();
-                
-                $userModel = new User();
-                $map = ['ordernum'=>$order->ordernum, 'cate'=>5, 'msg'=>'余额充值'];
-                $userModel->handleUser('usdt', $order->user_id, $order->num, 1, $map);
-  
-                $this->setOrderStatus($ordernum, 1);
-                
-                DB::commit();
-            }
-            catch (\Exception $e)
-            {
-                DB::rollBack();
-                Log::channel('user_recharge')->info('回调失败', $in);
-                
-                //                 var_dump($e->getMessage().$e->getLine());die;
-            }
-        }
-        $MyRedis->del_lock($lockKey);
-        exit('success');
-    }
-    
-    //开通商家
-    private function buyNode($in)
-    {
-        $ordernum = $in['remarks'];
-        
-        $lockKey = 'callback:buyNode:'.$ordernum;
+        $lockKey = 'callback:userRegister:'.$ordernum;
         $MyRedis = new MyRedis();
 //                                         $MyRedis->del_lock($lockKey);
         $ret = $MyRedis->setnx_lock($lockKey, 30);
@@ -192,16 +87,474 @@ class CallbackController extends Controller
             die;
         }
         
-        $order = NodeOrderLog::query()->where(['ordernum'=>$ordernum, 'pay_status'=>0])->first();
+        $order = RegisterOrderLog::query()->where(['ordernum'=>$ordernum, 'pay_status'=>0])->first();
         if (!$order) {
-            Log::channel('buy_node')->info('订单不存在', $in);
+            Log::channel('register_order')->info('订单不存在', $in);
+            $MyRedis->del_lock($lockKey);
+            die;
+        }
+        
+        if (!isset($in['coin_token']) || $in['coin_token']!='BNB')
+        {
+            Log::channel('register_order')->info('币种不正确', $in);
+            $MyRedis->del_lock($lockKey);
+            die;
+        }
+        
+        $hash = isset($in['hash']) && $in['hash'] ? $in['hash'] : '';
+        $amount = @bcadd($in['amount'], '0', 6);
+        
+        //支付类型1USDT(链上)
+        if (bccomp($order->bnb, $amount, 2)>0) {
+            if ($in['status']==3 && $order->pay_status==0) {
+                Log::channel('register_order')->info('金额有误', $in);
+                $order->pay_status = 2;
+                $order->hash = $hash;
+                $order->save();
+                $this->setOrderStatus($ordernum, 2);
+            }
+            $MyRedis->del_lock($lockKey);
+            die;
+        }
+        
+        if ($in['status']==3 && $order->pay_status==0)
+        {
+            $wlockKey = 'userRegister:'.$order->wallet;
+            $wLock = $MyRedis->add_lock($wlockKey, 15); 
+            if ($wLock) 
+            {
+                DB::beginTransaction();
+                try
+                {
+                    $user = User::query()->where('wallet', $order->wallet)->first(['id']);
+                    if (!$user)
+                    {
+                        $parent = User::query()->where('id', $order->parent_id)->select('id','wallet','path','level')->first();
+                        
+                        $validated = [];
+                        $path = '';
+                        $parent_level = 0;
+                        if ($parent) {
+                            $path = empty($parent->path) ? '-'.$parent->id.'-' : $parent->path.$parent->id.'-';
+                            $parent_level = $parent->level;
+                        }
+                        
+                        $validated['parent_id'] = $parent ? $parent->id : 0;
+                        $validated['wallet'] = $order->wallet;
+                        $validated['path'] = $path;
+                        $validated['level'] = $parent_level+1;
+                        $validated['headimgurl'] = 'headimgurl/default.jpg';
+                        
+                        $user = User::create($validated);
+                        
+                        $puser = User::query()->where('id', $user->parent_id)->first(['id','nft_rank','zhi_num']);
+                        
+                        $time = time();
+                        $datetime = date('Y-m-d H:i:s', $time);
+                        
+                        $order->pay_status = 1;
+                        $order->user_id = $user->id;
+                        $order->hash = $hash;
+                        $order->finish_time = $datetime;
+                        $order->save();
+                        
+                        $RegisterOrder = new RegisterOrder();
+                        $RegisterOrder->ordernum = $order->ordernum;
+                        $RegisterOrder->user_id = $user->id;
+                        $RegisterOrder->wallet = $order->wallet;
+                        $RegisterOrder->parent_id = $order->parent_id;
+                        $RegisterOrder->price = $order->price;
+                        $RegisterOrder->bnb = $order->bnb;
+                        $RegisterOrder->pay_type = $order->pay_type;
+                        $RegisterOrder->bnb_price = $order->bnb_price;
+                        $RegisterOrder->hash = $hash;
+                        $RegisterOrder->save();
+                        
+                        $uup = [];
+                        //赠送JUJ锁仓
+                        $register_give_juj = intval(config('register_give_juj'));
+                        if ($register_give_juj>0)
+                        {
+                            $lock_juj_day = intval(config('lock_juj_day'));
+                            $lock_juj_day = $lock_juj_day>0 ? $lock_juj_day : 30;
+                            
+                            $UserLockOrder = new UserLockOrder();
+                            $UserLockOrder->ordernum = $order->ordernum;
+                            $UserLockOrder->user_id = $user->id;
+                            $UserLockOrder->total = $register_give_juj;
+                            $UserLockOrder->wait_num = $register_give_juj;
+                            $UserLockOrder->total_day = $lock_juj_day;
+                            $UserLockOrder->wait_day = $lock_juj_day;
+                            $UserLockOrder->source_type = 1;   //来源类型1注册赠送2空投赠送
+                            $UserLockOrder->save();
+                            
+                            $uup['juj_lock'] = DB::raw("`juj_lock`+{$register_give_juj}");
+                        }
+                        
+                        $userModel = new User();
+                        //赠送NFT
+                        $register_give_nft = intval(config('register_give_nft'));
+                        $NftConfig = NftConfig::query()->where('lv', $register_give_nft)->first();
+                        if ($NftConfig)
+                        {
+                            $uup['nft_rank'] = $NftConfig->lv;
+                            
+                            //统计&&日志
+                            //来源1注册赠送2合成获得3签到获得4平台购买5推荐获得6合成扣除7签到扣除
+                            $map = ['cate'=>1, 'msg'=>'注册赠送', 'ordernum'=>$order->ordernum];
+                            $userModel->handleNftLog($user->id, 1, $NftConfig->lv, 1, $map);
+                            
+                            $total_day = $NftConfig->upgrade_type==1 ? $NftConfig->upgrade_value : 0;
+                            $UserNft = new UserNft();
+                            $UserNft->user_id = $user->id;
+                            $UserNft->target_id = 0;
+                            $UserNft->source_type = 1;  //来源1注册赠送2合成获得3签到获得4平台购买5推荐获得
+                            $UserNft->lv = $NftConfig->lv;
+                            $UserNft->status = 1;       //状态1仓库中2已合成3已升级
+                            $UserNft->upgrade_type = $NftConfig->upgrade_type;
+                            $UserNft->total_day = $total_day;
+                            $UserNft->wait_day = $total_day;
+                            $UserNft->save();
+                        }
+                        
+                        if ($uup) {
+                            User::query()->where('id',$user->id)->update($uup);
+                        }
+                        
+                        //上级获得NFT奖励
+                        $direct_push_num = intval(config('direct_push_num'));
+                        $direct_push_nft = intval(config('direct_push_nft'));
+                        if ($direct_push_num>0 && $direct_push_nft>0 && $puser)
+                        {
+                            $mod = bcmod($puser->zhi_num, $direct_push_num, 0);
+                            if ($mod==0)
+                            {
+                                $NftConfig = NftConfig::query()->where('lv', $direct_push_nft)->first();
+                                if ($NftConfig->lv>$puser->nft_rank) {
+                                    $puser->nft_rank = $NftConfig->lv;
+                                    $puser->save();
+                                }
+                                
+                                //统计&&日志
+                                //来源1注册赠送2合成获得3签到获得4平台购买5推荐获得6合成扣除7签到扣除
+                                $map = ['cate'=>5, 'msg'=>'推荐获得', 'ordernum'=>$order->ordernum];
+                                $userModel->handleNftLog($puser->id, 1, $NftConfig->lv, 1, $map);
+                                
+                                $total_day = $NftConfig->upgrade_type==1 ? $NftConfig->upgrade_value : 0;
+                                $UserNft = new UserNft();
+                                $UserNft->user_id = $puser->id;
+                                $UserNft->target_id = 0;
+                                $UserNft->source_type = 5;  //来源1注册赠送2合成获得3签到获得4平台购买5推荐获得
+                                $UserNft->lv = $NftConfig->lv;
+                                $UserNft->status = 1;       //状态1仓库中2已合成3已升级
+                                $UserNft->upgrade_type = $NftConfig->upgrade_type;
+                                $UserNft->total_day = $total_day;
+                                $UserNft->wait_day = $total_day;
+                                $UserNft->save();
+                            }
+                        }
+                    }
+                    
+                    $this->setOrderStatus($ordernum, 1);
+                    
+                    DB::commit();
+                }
+                catch (\Exception $e)
+                {
+                    DB::rollBack();
+                    Log::channel('register_order')->info('回调失败', $in);
+                    
+                    //                 var_dump($e->getMessage().$e->getLine());die;
+                }
+            }
+        }
+        $MyRedis->del_lock($lockKey);
+        exit('success');
+    }
+    
+    
+    private function signOrder($in)
+    {
+        $ordernum = $in['remarks'];
+        
+        $lockKey = 'callback:signOrder:'.$ordernum;
+        $MyRedis = new MyRedis();
+//                                                 $MyRedis->del_lock($lockKey);
+        $ret = $MyRedis->setnx_lock($lockKey, 30);
+        if(!$ret){
+            Log::channel('sign_order')->info('上锁失败', $in);
+            die;
+        }
+        
+        $order = SignOrderLog::query()->where(['ordernum'=>$ordernum, 'pay_status'=>0])->first();
+        if (!$order) {
+            Log::channel('sign_order')->info('订单不存在', $in);
             $MyRedis->del_lock($lockKey);
             die;
         }
         
         if (!isset($in['coin_token']) || $in['coin_token']!='USDT')
         {
-            Log::channel('buy_node')->info('币种不正确', $in);
+            Log::channel('sign_order')->info('币种不正确', $in);
+            $MyRedis->del_lock($lockKey);
+            die;
+        }
+        
+        $hash = isset($in['hash']) && $in['hash'] ? $in['hash'] : '';
+        $amount = @bcadd($in['amount'], '0', 6);
+        
+        //支付类型1USDT(链上)
+        if (bccomp($order->price, $amount, 6)>0) {
+            if ($in['status']==3 && $order->pay_status==0) {
+                Log::channel('sign_order')->info('金额有误', $in);
+                $order->pay_status = 2;
+                $order->hash = $hash;
+                $order->save();
+                $this->setOrderStatus($ordernum, 2);
+            }
+            $MyRedis->del_lock($lockKey);
+            die;
+        }
+        
+        if ($in['status']==3 && $order->pay_status==0)
+        {
+            
+            $sKey = 'signOrder:user:'.$order->user_id;
+//             $MyRedis->del_lock($sKey);
+            $sLock = $MyRedis->add_lock($sKey, 15);
+            if(!$sLock){
+                Log::channel('sign_order')->info('用户上锁失败', $in);
+                die;
+            }
+            
+            DB::beginTransaction();
+            try
+            {
+                $time = time();
+                $date = date('Y-m-d', $time);
+                $datetime = date('Y-m-d H:i:s', $time);
+                $ydate = date('Y-m-d', $time-86400);
+                
+                $order->date = $date;
+                $order->pay_status = 1;
+                $order->hash = $hash;
+                $order->finish_time = $datetime;
+                $order->save();
+                
+                $userModel = new User();
+                
+                //判断今日 是否签到
+                $exists = SignOrder::query()
+                    ->where('user_id', $order->user_id)
+                    ->where('date', $date)
+                    ->exists();
+                if (!$exists) 
+                {
+                    $nft_rank = 0;
+                    $user = User::query()
+                        ->where('id', $order->user_id)
+                        ->first(['id','parent_id','nft_rank','total_sign','continuous_sign','last_sign_date']);
+                    
+                    $NftConfig = NftConfig::GetListCache();
+                    $NftConfig = array_column($NftConfig, null, 'lv');
+                        
+                    //NFT签到升级
+                    $waitNftList = UserNft::query()
+                        ->where('user_id', $order->user_id)
+                        ->where('status', 1)        //状态1仓库中2已合成3已升级
+                        ->where('upgrade_type', 1)  //升级类型1签到天数2合成数量
+                        ->get(['id','user_id','lv','wait_day','over_day'])
+                        ->toArray();
+                    if ($waitNftList) 
+                    {
+                        foreach ($waitNftList as $nval) 
+                        {
+                            $nup = [];
+                            $wait_day = $nval['wait_day']-1;
+                            $over_day = $nval['over_day']+1;
+                            if ($wait_day<=0) 
+                            {
+                                $nup['status'] = 3;
+                                
+                                if ($NftConfig && isset($NftConfig[$nval['lv']])) 
+                                {
+                                    $thisNft = $NftConfig[$nval['lv']];
+                                    if ($thisNft['next_lv']>0 && isset($NftConfig[$thisNft['next_lv']])) 
+                                    {
+                                        $nextNft = $NftConfig[$thisNft['next_lv']];
+                                        
+                                        //统计&&日志
+                                        //来源1注册赠送2合成获得3签到升级获得4平台购买5推荐获得6合成扣除7签到升级扣除
+                                        $map = ['cate'=>7, 'msg'=>'签到升级扣除', 'ordernum'=>$order->ordernum];
+                                        $userModel->handleNftLog($order->user_id, 1, $thisNft['lv'], 2, $map);
+                                        
+                                        $map = ['cate'=>3, 'msg'=>'签到升级获得', 'ordernum'=>$order->ordernum];
+                                        $userModel->handleNftLog($order->user_id, 1, $nextNft['lv'], 1, $map);
+                                        
+                                        $total_day = $nextNft['upgrade_type']==1 ? $nextNft['upgrade_value'] : 0;
+                                        $UserNft = new UserNft();
+                                        $UserNft->user_id = $order->user_id;
+                                        $UserNft->target_id = 0;
+                                        $UserNft->source_type = 2;  //来源1注册赠送2合成获得3签到获得4平台购买5推荐获得
+                                        $UserNft->lv = $nextNft['lv'];
+                                        $UserNft->status = 1;       //状态1仓库中2已合成3已升级
+                                        $UserNft->upgrade_type = $nextNft['upgrade_type'];
+                                        $UserNft->total_day = $total_day;
+                                        $UserNft->wait_day = $total_day;
+                                        $UserNft->save();
+                                        
+                                        $nup['target_id'] = $UserNft->id;
+                                        
+                                        if ($nextNft['lv']>$nft_rank) {
+                                            $nft_rank = $nextNft['lv'];
+                                        }
+                                    }
+                                }
+                            }
+                            $nup['wait_day'] = $wait_day;
+                            $nup['over_day'] = $over_day;
+                            UserNft::query()->where('id', $nval['id'])->update($nup);
+                        }
+                    }
+                    
+                    $juj = '0';
+                    //锁仓释放
+                    $zhi_lock_rate = @bcadd(config('zhi_lock_rate'), '0', 6);
+                    
+                    $llist = UserLockOrder::query()
+                        ->where('user_id', $user->id)
+                        ->where('status', 0)    //释放状态0释放中1已完结
+                        ->get(['id','user_id','total','wait_num','over_num','actual_num','total_day','wait_day','ordernum'])
+                        ->toArray();
+                    if ($llist) 
+                    {
+                        foreach ($llist as $lval) 
+                        {
+                            $outNum = bcdiv($lval['total'], $lval['total_day'], 6);
+                            $outNum = bccomp($lval['wait_num'], $outNum, 6)>0 ? $outNum : $lval['wait_num'];
+                            
+                            $lup = [];
+                            $wait_day = $lval['wait_day']-1;
+                            if ($wait_day<=0) {
+                                $lup['status'] = 1;
+                            }
+                            $lup['wait_day'] = $wait_day;
+                            $lup['wait_num'] = bcsub($lval['wait_num'], $outNum, 6);
+                            $lup['over_num'] = bcadd($lval['over_num'], $outNum, 6);
+                            $lup['actual_num'] = bcadd($lval['actual_num'], $outNum, 6);
+                            $lup['sign_date'] = $date;
+                            
+                            UserLockOrder::query()->where('id', $lval['id'])->update($lup);
+                            
+                            if (bccomp($outNum, '0', 6)>0) 
+                            {
+                                $juj = bcadd($juj, $outNum, 6);
+                                //分类1系统增加2系统扣除3余额提币4提币驳回5锁仓释放
+                                $map = ['cate'=>5, 'msg'=>'锁仓释放', 'ordernum'=>$lval['ordernum']];
+                                $userModel->handleUser('juj', $lval['user_id'], $outNum, 1, $map);
+                                
+                                if ($user->parent_id>0 && bccomp($zhi_lock_rate, '0', 6)>0) 
+                                {
+                                    $zhiNum = bcmul($outNum, $zhi_lock_rate, 6);
+                                    if (bccomp($zhiNum, '0', 6)>0) 
+                                    {
+                                        //分类1系统增加2系统扣除3余额提币4提币驳回5锁仓释放6推荐奖励
+                                        $map = ['cate'=>6, 'msg'=>'推荐奖励', 'ordernum'=>$lval['ordernum'], 'from_user_id'=>$lval['user_id']];
+                                        $userModel->handleUser('juj', $user->parent_id, $zhiNum, 1, $map);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    
+                    //返利团队 Gas
+                    if ($user->parent_id) 
+                    {
+                        $puser = User::query()->where('id', $user->parent_id)->first(['id','zhi_num','nft_rank']);
+                        $gas_rate = TeamGasConfig::GetGasRate($puser->zhi_num);
+                        
+                        //NFT等级团队gas加成
+                        if (isset($NftConfig[$puser->nft_rank])) {
+                            $gas_rate = bcadd($gas_rate, $NftConfig[$puser->nft_rank]['gas_add_rate'], 6);
+                        }
+                        
+                        if (bccomp($gas_rate, '0', 6)>0) 
+                        {
+                            $gasNum = bcmul($order->price, $gas_rate, 6);
+                            if (bccomp($gasNum, '0', 6)>0) {
+                                //分类1系统增加2系统扣除3余额提币4提币驳回5团队返利GAS
+                                $map = ['cate'=>5, 'msg'=>'团队返利GAS', 'ordernum'=>$order->ordernum, 'from_user_id'=>$user->id];
+                                $userModel->handleUser('usdt', $user->parent_id, $gasNum, 1, $map);
+                            }
+                        }
+                    }
+                  
+                    $SignOrder = new SignOrder();
+                    $SignOrder->ordernum = $order->ordernum;
+                    $SignOrder->user_id = $order->user_id;
+                    $SignOrder->date = $date;
+                    $SignOrder->price = $order->price;
+                    $SignOrder->juj = $juj;
+                    $SignOrder->pay_type = $order->pay_type;
+                    $SignOrder->hash = $hash;
+                    $SignOrder->save();
+                    
+                    //用户签到统计
+                    $user->total_sign = $user->total_sign+1;
+                    if ($ydate==$user->last_sign_date) {
+                        $user->continuous_sign = $user->continuous_sign+1;
+                    } else {
+                        $user->continuous_sign = 1;
+                    }
+                    $user->last_sign_date = $date;
+                    //用户等级升级
+                    if ($nft_rank>$user->nft_rank) {
+                        $user->nft_rank = $nft_rank;
+                    }
+                    $user->save();
+                }
+                
+                $this->setOrderStatus($ordernum, 1);
+                
+                DB::commit();
+            }
+            catch (\Exception $e)
+            {
+                DB::rollBack();
+                $MyRedis->del_lock($sKey);
+                Log::channel('sign_order')->info('回调失败222', $in);
+//                                 var_dump($e->getMessage().$e->getLine());die;
+            }
+            $MyRedis->del_lock($sKey);
+        }
+        $MyRedis->del_lock($lockKey);
+        exit('success');
+    }
+    
+    //开通商家
+    private function buyNft($in)
+    {
+        $ordernum = $in['remarks'];
+        
+        $lockKey = 'callback:buyNft:'.$ordernum;
+        $MyRedis = new MyRedis();
+        //                                                 $MyRedis->del_lock($lockKey);
+        $ret = $MyRedis->setnx_lock($lockKey, 30);
+        if(!$ret){
+            Log::channel('buy_nft')->info('上锁失败', $in);
+            die;
+        }
+        
+        $order = NftOrderLog::query()->where(['ordernum'=>$ordernum, 'pay_status'=>0])->first();
+        if (!$order) {
+            Log::channel('buy_nft')->info('订单不存在', $in);
+            $MyRedis->del_lock($lockKey);
+            die;
+        }
+        
+        if (!isset($in['coin_token']) || $in['coin_token']!='USDT')
+        {
+            Log::channel('buy_nft')->info('币种不正确', $in);
             $MyRedis->del_lock($lockKey);
             die;
         }
@@ -212,7 +565,7 @@ class CallbackController extends Controller
         //支付类型1USDT(链上)
         if (bccomp($order->price, $amount, 2)>0) {
             if ($in['status']==3 && $order->pay_status==0) {
-                Log::channel('buy_node')->info('金额有误', $in);
+                Log::channel('buy_nft')->info('金额有误', $in);
                 $order->pay_status = 2;
                 $order->hash = $hash;
                 $order->save();
@@ -227,7 +580,7 @@ class CallbackController extends Controller
             
             DB::beginTransaction();
             try
-            {   
+            {
                 $time = time();
                 $datetime = date('Y-m-d H:i:s', $time);
                 
@@ -236,160 +589,46 @@ class CallbackController extends Controller
                 $order->finish_time = $datetime;
                 $order->save();
                 
-                $NodeOrder = new NodeOrder();
-                $NodeOrder->ordernum = $order->ordernum;
-                $NodeOrder->user_id = $order->user_id;
-                $NodeOrder->lv = $order->lv;
-                $NodeOrder->price = $order->price;
-                $NodeOrder->gift_ticket_id = $order->gift_ticket_id;
-                $NodeOrder->gift_ticket_num = $order->gift_ticket_num;
-                $NodeOrder->gift_rank_id = $order->gift_rank_id;
-                $NodeOrder->static_rate = $order->static_rate;
-                $NodeOrder->pay_type = $order->pay_type;
-                $NodeOrder->hash = $hash;
-                $NodeOrder->save();
+                $NftOrder = new NftOrder();
+                $NftOrder->ordernum = $order->ordernum;
+                $NftOrder->user_id = $order->user_id;
+                $NftOrder->lv = $order->lv;
+                $NftOrder->price = $order->price;
+                $NftOrder->pay_type = $order->pay_type;
+                $NftOrder->hash = $hash;
+                $NftOrder->save();
                 
-                $TicketConfig = TicketConfig::query()->where('id', $order->gift_ticket_id)->first();
-                if ($TicketConfig && $order->gift_ticket_num>0)
-                {
-                    $TicketData = [];
-                    for ($i=1; $i<=$order->gift_ticket_num; $i++)
-                    {
-                        $TicketData[] = [
-                            'user_id' => $order->user_id,
-                            'ticket_id' => $order->gift_ticket_id,
-                            'source_type' => 2, //来源1平台购买2平台赠送3用户赠送
-                            'ordernum' => $order->ordernum,
-                            'created_at' => $datetime,
-                            'updated_at' => $datetime
-                        ];
-                    }
-                    UserTicket::query()->insert($TicketData);
-                }
-                
-                $uup = [];
-                $uup['node_rank'] = $order->lv;
-                $RankConfig = RankConfig::query()->where('lv', $order->gift_rank_id)->first();
-                if ($RankConfig) {
-                    $uup['rank'] = $RankConfig->lv;
-                    $uup['hold_rank'] = 1;
-                }
-                if (bccomp($order->static_rate, '0', 2)>0) {
-                    $uup['static_rate'] = $order->static_rate;
-                }
-                User::query()->where('id', $order->user_id)->update($uup);
-                
-                NodeConfig::query()->where('lv', $order->lv)->update([
+                NftConfig::query()->where('lv', $order->lv)->update([
                     'stock'=> DB::raw("`stock`-1"),
                     'sales'=> DB::raw("`sales`+1")
                 ]);
                 
-                $this->setOrderStatus($ordernum, 1);
                 
-                DB::commit();
-            }
-            catch (\Exception $e)
-            {
-                DB::rollBack();
-                Log::channel('buy_node')->info('回调失败', $in);
+                $NftConfig = NftConfig::query()->where('lv', $order->lv)->first();
+                $user = User::query()->where('id', $order->user_id)->first(['id','nft_rank']);
                 
-//                 var_dump($e->getMessage().$e->getLine());die;
-            }
-        }
-        $MyRedis->del_lock($lockKey);
-        exit('success');
-    }
-    
-    
-    //开通商家
-    private function buyTicket($in)
-    {
-        $ordernum = $in['remarks'];
-        
-        $lockKey = 'callback:buyTicket:'.$ordernum;
-        $MyRedis = new MyRedis();
-//                                                 $MyRedis->del_lock($lockKey);
-        $ret = $MyRedis->setnx_lock($lockKey, 30);
-        if(!$ret){
-            Log::channel('buy_ticket')->info('上锁失败', $in);
-            die;
-        }
-        
-        $order = TicketOrderLog::query()->where(['ordernum'=>$ordernum, 'pay_status'=>0])->first();
-        if (!$order) {
-            Log::channel('buy_ticket')->info('订单不存在', $in);
-            $MyRedis->del_lock($lockKey);
-            die;
-        }
-        
-        if (!isset($in['coin_token']) || $in['coin_token']!='USDT')
-        {
-            Log::channel('buy_ticket')->info('币种不正确', $in);
-            $MyRedis->del_lock($lockKey);
-            die;
-        }
-        
-        $hash = isset($in['hash']) && $in['hash'] ? $in['hash'] : '';
-        $amount = @bcadd($in['amount'], '0', 2);
-        
-        //支付类型1USDT(链上)
-        if (bccomp($order->total_price, $amount, 2)>0) {
-            if ($in['status']==3 && $order->pay_status==0) {
-                Log::channel('buy_ticket')->info('金额有误', $in);
-                $order->pay_status = 2;
-                $order->hash = $hash;
-                $order->save();
-                $this->setOrderStatus($ordernum, 2);
-            }
-            $MyRedis->del_lock($lockKey);
-            die;
-        }
-        
-        if ($in['status']==3 && $order->pay_status==0)
-        {
-            
-            DB::beginTransaction();
-            try
-            {
-                $time = time();
-                $datetime = date('Y-m-d H:i:s', $time);
-                
-                $order->pay_status = 1;
-                $order->hash = $hash;
-                $order->finish_time = $datetime;
-                $order->save();
-                
-                $TicketOrder = new TicketOrder();
-                $TicketOrder->ordernum = $order->ordernum;
-                $TicketOrder->user_id = $order->user_id;
-                $TicketOrder->ticket_id = $order->ticket_id;
-                $TicketOrder->total_price = $order->total_price;
-                $TicketOrder->num = $order->num;
-                $TicketOrder->ticket_price = $order->ticket_price;
-                $TicketOrder->pay_type = $order->pay_type;
-                $TicketOrder->hash = $hash;
-                $TicketOrder->save();
-                
-                
-                if ($order->num>0)
-                {
-                    $TicketData = [];
-                    for ($i=1; $i<=$order->num; $i++)
-                    {
-                        $TicketData[] = [
-                            'user_id' => $order->user_id,
-                            'ticket_id' => $order->ticket_id,
-                            'source_type' => 1, //来源1平台购买2平台赠送3用户赠送
-                            'ordernum' => $order->ordernum,
-                            'hash' => $hash,
-                            'created_at' => $datetime,
-                            'updated_at' => $datetime
-                        ];
-                    }
-                    UserTicket::query()->insert($TicketData);
+                if ($NftConfig->lv>$user->nft_rank) {
+                    $user->nft_rank = $NftConfig->lv;
+                    $user->save();
                 }
                 
-                TicketConfig::query()->where('id', $order->ticket_id)->increment('ticket_sale', $order->num);
+                $userModel = new User();
+                //统计&&日志
+                //来源1注册赠送2合成获得3签到获得4平台购买5推荐获得6合成扣除7签到扣除
+                $map = ['cate'=>4, 'msg'=>'平台购买', 'ordernum'=>$order->ordernum];
+                $userModel->handleNftLog($user->id, 1, $NftConfig->lv, 1, $map);
+                
+                $total_day = $NftConfig->upgrade_type==1 ? $NftConfig->upgrade_value : 0;
+                $UserNft = new UserNft();
+                $UserNft->user_id = $user->id;
+                $UserNft->target_id = 0;
+                $UserNft->source_type = 4;  //来源1注册赠送2合成获得3签到获得4平台购买5推荐获得
+                $UserNft->lv = $NftConfig->lv;
+                $UserNft->status = 1;       //状态1仓库中2已合成3已升级
+                $UserNft->upgrade_type = $NftConfig->upgrade_type;
+                $UserNft->total_day = $total_day;
+                $UserNft->wait_day = $total_day;
+                $UserNft->save();
                 
                 $this->setOrderStatus($ordernum, 1);
                 
@@ -398,7 +637,7 @@ class CallbackController extends Controller
             catch (\Exception $e)
             {
                 DB::rollBack();
-                Log::channel('buy_ticket')->info('回调失败', $in);
+                Log::channel('buy_nft')->info('回调失败', $in);
                 
                 //                 var_dump($e->getMessage().$e->getLine());die;
             }

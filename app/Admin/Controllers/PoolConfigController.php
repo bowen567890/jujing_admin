@@ -11,7 +11,7 @@ use Dcat\Admin\Http\JsonResponse;
 
 class PoolConfigController extends AdminController
 {
-    public $typeArr = [1=> '提现池子', 2=>'精英池子',3=>'核心池子',4=>'创世池子',5=>'排名池子'];
+    public $typeArr = [1=> '销毁池', 2=>'营销池'];
     
     protected function grid()
     {

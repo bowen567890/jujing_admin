@@ -11,7 +11,7 @@ return [
     | login page.
     |
     */
-    'name' => '海湖协议',
+    'name' => '聚鲸',
 
     /*
     |--------------------------------------------------------------------------
@@ -22,7 +22,7 @@ return [
     | `img` tag, eg '<img src="http://logo-url" alt="Admin logo">'.
     |
     */
-    'logo' => '<img src="/vendor/dcat-admin/images/logo.png" width="35"> &nbsp;海湖协议',
+    'logo' => '<img src="/vendor/dcat-admin/images/logo.png" width="35"> &nbsp;聚鲸',
 
     /*
     |--------------------------------------------------------------------------
@@ -88,7 +88,7 @@ return [
     | Html title for all pages.
     |
     */
-    'title' => '海湖协议',
+    'title' => '聚鲸',
 
     /*
     |--------------------------------------------------------------------------

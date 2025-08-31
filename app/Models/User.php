@@ -215,7 +215,7 @@ class User extends Authenticatable implements JWTSubject
      */
     public function handleUser($table, $user_id, $total, $type, $map = array())
     {
-        if (!in_array($table, array('usdt'))) {
+        if (!in_array($table, array('usdt','juj'))) {
             return false;
         }
         $model = DB::table("user_{$table}");
@@ -257,6 +257,9 @@ class User extends Authenticatable implements JWTSubject
         }
         if (isset($map['from_user_id'])) {
             $add['from_user_id'] = $map['from_user_id'];
+        }
+        if (isset($map['depth'])) {
+            $add['depth'] = $map['depth'];
         }
         
         $addid = $model->insertGetId($add);
@@ -502,4 +505,70 @@ class User extends Authenticatable implements JWTSubject
                 }
             }
         }
+        
+   
+    /**
+     * 处理余额,
+     */
+    public function handleNftLog($user_id, $total=0, $lv, $type, $map = array())
+    {
+        $model = DB::table('user_nft_log');
+        if (!in_array($type, array(1, 2))) {
+            return false;
+        }
+        if ($type == 1) 
+        {
+            $UserNftStat = UserNftStat::query()
+                ->where('user_id', $user_id)
+                ->where('lv', $lv)
+                ->first();
+            if (!$UserNftStat)
+            {
+                $UserNftStat = new UserNftStat();
+                $UserNftStat->user_id = $user_id;
+                $UserNftStat->lv = $lv;
+                $UserNftStat->num = $total;
+                $UserNftStat->save();
+            } else {
+                UserNftStat::query()->where('id', $UserNftStat->id)->increment('num', $total);
+            }
+        } 
+        else if ($type == 2) 
+        {
+            UserNftStat::query()
+                ->where('user_id', $user_id)
+                ->where('lv', $lv)
+                ->decrement('num', $total);
+        }
+        
+        if (isset($map['date']) && $map['date']) {
+            $date = $map['date'];
+        } else {
+            $date = date('Y-m-d H:i:s');
+        }
+        
+        $add = array(
+            'user_id' => $user_id,
+            'type' => $type,
+            'total' => $total,
+            'ordernum' => isset($map['ordernum']) && $map['ordernum'] ? $map['ordernum'] : '',
+            'cate' => isset($map['cate']) ? $map['cate'] : 0,
+            'msg' => isset($map['msg']) ? $map['msg'] : '',
+            'lv' => $lv,
+            'created_at' => $date,
+            'updated_at' => $date,
+        );
+        
+        if (isset($map['content']) && $map['content']) {
+            $add['content'] = $map['content'];
+        } else {
+            $add['content'] = $add['msg'];
+        }
+        if (isset($map['from_user_id'])) {
+            $add['from_user_id'] = $map['from_user_id'];
+        }
+        
+        $model->insertGetId($add);
+    }
+        
 }

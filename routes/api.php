@@ -60,6 +60,8 @@ Route::namespace('App\Http\Controllers\Api')->group(function (){
         Route::prefix('auth')->group(function (){
             //登录
             Route::post('login', 'AuthController@login');
+            Route::post('isRegister', 'AuthController@isRegister');
+            Route::post('register', 'AuthController@register');
         });
 
         //需要验证登录
@@ -79,29 +81,20 @@ Route::namespace('App\Http\Controllers\Api')->group(function (){
                 Route::post('pool','IndexController@pool');
             });
             
-            Route::prefix('recharge')->group(function (){
-                Route::post('recharge','RechargeController@recharge');
-                Route::post('rechargeLog','RechargeController@rechargeLog');
+            Route::prefix('nft')->group(function (){
+                Route::post('config','NftController@config');
+                Route::post('buy','NftController@buy');
+                Route::post('buyLog','NftController@buyLog');
+                Route::post('nftLog','NftController@nftLog');
+                Route::post('myNft','NftController@myNft');
+                Route::post('upgrade','NftController@upgrade');
             });
             
-            Route::prefix('node')->group(function (){
-                Route::post('config','NodeController@config');
-                Route::post('openNode','NodeController@openNode');
-                Route::post('openNodeLog','NodeController@openNodeLog');
+            Route::prefix('sign')->group(function (){
+                Route::post('index','SignController@index');
+                Route::post('sign','SignController@sign');
+                Route::post('signLog','SignController@signLog');
             });
-            
-            Route::prefix('ticket')->group(function (){
-                Route::post('config','TicketController@config');
-                Route::post('buy','TicketController@buy');
-                Route::post('buyLog','TicketController@buyLog');
-                Route::post('transfer','TicketController@transfer');
-            });
-            Route::prefix('insurance')->group(function (){
-                Route::post('invest','InsuranceController@invest');
-                Route::post('investLog','InsuranceController@investLog');
-                Route::post('redeem','InsuranceController@redeem');
-            });
-                
             
             Route::prefix('basic')->group(function (){
 //                 Route::post('upload','BasicController@upload');

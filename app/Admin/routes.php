@@ -24,6 +24,7 @@ Route::group([
     $router->resource('rank_config','RankConfigController');
     $router->resource('depth_config','DepthConfigController');
     $router->resource('user_usdt','UserUsdtController');
+    $router->resource('user_juj','UserJujController');
     $router->resource('rank_conf','RankConfigController');
     $router->resource('deep_config','DeepConfigController');
     
@@ -32,18 +33,22 @@ Route::group([
     
     $router->resource('user_usdt','UserUsdtController');
     
-    $router->resource('node_config','NodeConfigController');
-    $router->resource('node_order','NodeOrderController');
-    $router->resource('ticket_config','TicketConfigController');
-    $router->resource('user_ticket','UserTicketController');
-    
-    $router->resource('insurance_order','InsuranceOrderController');
-    
-    $router->resource('user_ranking_day','UserRankingDayController');
     $router->resource('pool_config','PoolConfigController');
     
+    $router->resource('nft_config','NftConfigController');
+    $router->resource('nft_order','NftOrderController');
+    $router->resource('user_nft_stat','UserNftStatController');
+    $router->resource('user_nft_log','UserNftLogController');
     
-    $router->any('auth/extensions',function (){
-        die();
-    });
+    $router->resource('sign_order','SignOrderController');
+    $router->resource('user_lock_order','UserLockOrderController');
+    
+    
+    $router->resource('team_gas_config','TeamGasConfigController');
+    
+    
+    
+//     $router->any('auth/extensions',function (){
+//         die();
+//     });
 });

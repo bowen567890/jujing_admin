@@ -1,7 +1,7 @@
 <?php
 $dir = $_GET['dir'];
 
-if($dir!='sealake_admin') {
+if($dir!='jujing_admin') {
     echo '88';
     die;
 }

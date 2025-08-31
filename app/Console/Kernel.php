@@ -25,17 +25,13 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        
         //查询代币价格
 //         $schedule->command('sync:tokenprice')->cron('*/2 * * * *');
         //保证金订单释放
-        $schedule->command('FeeInsuranceOrder')->cron('* * * * *');
+        $schedule->command('CheckSign')->cron('0 0 * * *');
         
         //池子奖励 每日0点10分分
-        $schedule->command('SyncPoolReward')->cron('10 0 * * *');
-        
-        //入场券日志 不在这里执行 脚本每10秒执行
-        //         $schedule->command('command:SyncTicketEvent')->cron('* * * * *');
+//         $schedule->command('SyncPoolReward')->cron('10 0 * * *');
     }
 
 

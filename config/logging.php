@@ -237,21 +237,21 @@ return [
             'channels' => ['single'],
             'ignore_exceptions' => false,
         ],
-        'buy_node' => [
+        'register_order' => [
             'driver' => 'daily',
-            'path' => storage_path('logs/buy_node.log'),
+            'path' => storage_path('logs/register_order.log'),
             'channels' => ['single'],
             'ignore_exceptions' => false,
         ],
-        'buy_ticket' => [
+        'buy_nft' => [
             'driver' => 'daily',
-            'path' => storage_path('logs/buy_ticket.log'),
+            'path' => storage_path('logs/buy_nft.log'),
             'channels' => ['single'],
             'ignore_exceptions' => false,
         ],
-        'user_recharge' => [
+        'sign_order' => [
             'driver' => 'daily',
-            'path' => storage_path('logs/user_recharge.log'),
+            'path' => storage_path('logs/sign_order.log'),
             'channels' => ['single'],
             'ignore_exceptions' => false,
         ],
