@@ -74,6 +74,7 @@ class UserController extends AdminController
                 $big_num = UserModel::query()->where('parent_id', $this->id)->orderBy('total_num', 'desc')->value('total_num');
                 $big_num = intval($big_num);
                 
+                
                 $html = "";
                 $html .= "<div style='margin-top: 2px;'>个人单数：" . $this->self_num . "</div>";
                 $html .= "<div style='margin-top: 2px;'>团队单数：" . $this->team_num . "</div>";
