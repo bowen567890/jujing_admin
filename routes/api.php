@@ -72,7 +72,7 @@ Route::namespace('App\Http\Controllers\Api')->group(function (){
                 Route::post('info','UserController@info');
                 Route::post('teamList','UserController@teamList');
                 Route::post('usdtLog','UserController@usdtLog');
-                Route::post('ticketList','UserController@ticketList');
+                Route::post('jujLog','UserController@jujLog');
             });
 
             Route::prefix('index')->group(function (){

@@ -34,6 +34,7 @@ use App\Models\ManageRankConfig;
 use App\Models\UserPoint;
 use App\Models\UserTicket;
 use App\Models\TicketConfig;
+use App\Models\UserJuj;
 
 class UserController extends Controller
 {
@@ -54,34 +55,10 @@ class UserController extends Controller
         $data['wallet'] = $user->wallet;
         $data['code'] = $user->code;
         $data['usdt'] = $user->usdt;
-        $data['rank'] = $user->rank;
-        $data['node_rank'] = $user->node_rank;
+        $data['juj'] = $user->usdt;
+        $data['nft_rank'] = $user->nft_rank;
         $data['zhi_num'] = $user->zhi_num;
         $data['group_num'] = $user->group_num;
-        $data['self_yeji'] = $user->self_yeji;
-        $data['team_yeji'] = $user->team_yeji;
-        $data['small_yeji'] = $user->small_yeji;
-        $data['total_yeji'] = $user->total_yeji;
-        
-        $data['self_num'] = $user->self_num;
-        $data['team_num'] = $user->team_num;
-        $data['total_num'] = $user->total_num;
-        $data['small_num'] = $user->small_num;
-        $data['total_income'] = $user->total_income;
-        
-        //分类1系统增加2系统扣除3余额提币4提币驳回5余额充值6购买入场券7支付保证金8赎回保证金9开通节点
-        //12直推奖励13层级奖励14静态奖励15等级奖励16精英分红17核心分红18创世分红19排名分红
-        $today_income = UserUsdt::query()
-            ->where('user_id', $user->id)
-            ->whereIn('cate', [14])
-            ->whereDate('created_at',date('Y-m-d'))
-            ->sum('total');
-        $data['today_income'] = $today_income;
-        
-        $data['static_rate'] = $user->static_rate;
-        
-        $data['hold_ticket'] = UserTicket::query()->where('user_id', $user->id)->where('status', 0)->count();
-        
         
         $data['headimgurl'] = getImageUrl($user->headimgurl);
         
@@ -156,6 +133,41 @@ class UserController extends Controller
         if ($list) {
             foreach ($list as &$v) {
                 $v['content'] = $v['msg'] = __("error.USDT类型{$v['cate']}");
+            }
+        }
+        return responseJson($list);
+    }
+    
+    public function jujLog(Request $request)
+    {
+        $user = auth()->user();
+        $in = $request->input();
+        
+        $pageNum = isset($in['page_num']) && intval($in['page_num'])>0 ? intval($in['page_num']) : 10;
+        $page = isset($in['page']) ? intval($in['page']) : 1;
+        $page = $page<=0 ? 1 : $page;
+        $offset = ($page-1)*$pageNum;
+        
+        $where['user_id'] = $user->id;
+        
+        $cate = [];
+        if (isset($in['cate']) && $in['cate'] && is_array($in['cate'])) {
+            $cate = array_filter($in['cate']);
+        }
+        
+        $list = UserJuj::query()
+        ->where($where);
+        if ($cate) {
+            $list = $list->whereIn('cate', $cate);
+        }
+        $list = $list->orderBy('id', 'desc')
+        ->offset($offset)
+        ->limit($pageNum)
+        ->get(['id','type','total','cate','msg','content','created_at'])
+        ->toArray();
+        if ($list) {
+            foreach ($list as &$v) {
+                $v['content'] = $v['msg'] = __("error.JUJ类型{$v['cate']}");
             }
         }
         return responseJson($list);
