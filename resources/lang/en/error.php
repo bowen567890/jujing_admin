@@ -62,12 +62,13 @@ return [
     'NFT数量不足' => 'Insufficient number of NFTs',
     '今日已签到' => 'Signed in today',
     
-    //分类1系统增加2系统扣除3余额提币4提币驳回5团队返利GAS
+    //分类1系统增加2系统扣除3余额提币4提币驳回5团队返利GAS6手续费分红
     'USDT类型1' => 'System increase',
     'USDT类型2' => 'System deduction',
     'USDT类型3' => 'Balance withdrawal',
     'USDT类型4' => 'Withdrawal rejection',
     'USDT类型5' => 'Team rebate GAS',
+    'USDT类型6' => 'Commission fee dividends',
     
     //分类1系统增加2系统扣除3余额提币4提币驳回5锁仓释放6推荐奖励
     'JUJ类型1' => 'System increase',

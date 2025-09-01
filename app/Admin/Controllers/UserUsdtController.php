@@ -16,6 +16,7 @@ class UserUsdtController extends AdminController
         3=>'余额提币',
         4=>'提币驳回',
         5=>'团队返利GAS',
+        6=>'手续费分红',
     ];
      
     protected function grid()
