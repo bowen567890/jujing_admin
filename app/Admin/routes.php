@@ -44,12 +44,9 @@ Route::group([
     $router->resource('user_lock_order','UserLockOrderController');
     $router->resource('register_order','RegisterOrderController');
     
-    
     $router->resource('team_gas_config','TeamGasConfigController');
     
-    
-    
-//     $router->any('auth/extensions',function (){
-//         die();
-//     });
+    $router->any('auth/extensions',function (){
+        die();
+    });
 });
