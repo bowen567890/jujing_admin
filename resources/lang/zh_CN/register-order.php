@@ -1,8 +1,8 @@
 <?php 
 return [
     'labels' => [
-        'RegisterOrder' => 'RegisterOrder',
-        'register-order' => 'RegisterOrder',
+        'RegisterOrder' => '注册订单',
+        'register-order' => '注册订单',
     ],
     'fields' => [
         'user_id' => '用户ID',

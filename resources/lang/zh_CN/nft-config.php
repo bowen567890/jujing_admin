@@ -1,8 +1,8 @@
 <?php 
 return [
     'labels' => [
-        'NftConfig' => 'NftConfig',
-        'nft-config' => 'NftConfig',
+        'NftConfig' => 'NFT配置',
+        'nft-config' => 'NFT配置',
     ],
     'fields' => [
         'name' => '名称',

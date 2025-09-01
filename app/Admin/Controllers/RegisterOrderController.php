@@ -20,20 +20,35 @@ class RegisterOrderController extends AdminController
         return Grid::make(new RegisterOrder(), function (Grid $grid) {
             $grid->column('id')->sortable();
             $grid->column('user_id');
+            $grid->column('wallet', '钱包地址');
             $grid->column('parent_id');
             $grid->column('price');
             $grid->column('bnb');
-            $grid->column('pay_type');
+//             $grid->column('pay_type');
             $grid->column('bnb_price');
-            $grid->column('ordernum');
-            $grid->column('finish_time');
-            $grid->column('hash');
+//             $grid->column('ordernum');
+            $grid->column('hash', '哈希')->display('点击查看') // 设置按钮名称
+            ->modal(function ($modal) {
+                // 设置弹窗标题
+                $modal->title('交易哈希');
+                // 自定义图标
+                return $this->hash;
+            });
             $grid->column('created_at');
-            $grid->column('updated_at')->sortable();
+//             $grid->column('updated_at')->sortable();
         
+            $grid->model()->orderBy('id','desc');
+            
+            $grid->disableCreateButton();
+            $grid->disableRowSelector();
+            $grid->disableDeleteButton();
+            $grid->disableActions();
+            $grid->scrollbarX();    			//滚动条
+            $grid->paginate(10);				//分页
+            
             $grid->filter(function (Grid\Filter $filter) {
-                $filter->equal('id');
-        
+                $filter->equal('user_id');
+                $filter->equal('wallet', '钱包地址');
             });
         });
     }

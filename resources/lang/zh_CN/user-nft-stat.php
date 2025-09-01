@@ -1,8 +1,8 @@
 <?php 
 return [
     'labels' => [
-        'UserNftStat' => 'UserNftStat',
-        'user-nft-stat' => 'UserNftStat',
+        'UserNftStat' => '用户NFT',
+        'user-nft-stat' => '用户NFT',
     ],
     'fields' => [
         'user_id' => '用户ID',

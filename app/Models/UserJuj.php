@@ -11,4 +11,7 @@ class UserJuj extends Model
 	use HasDateTimeFormatter;
     protected $table = 'user_juj';
     
+    public function user(){
+        return $this->hasOne(User::class, 'id', 'user_id');
+    }
 }

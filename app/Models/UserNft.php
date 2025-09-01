@@ -11,4 +11,11 @@ class UserNft extends Model
 	use HasDateTimeFormatter;
     protected $table = 'user_nft';
     
+    public function user(){
+        return $this->hasOne(User::class, 'id', 'user_id');
+    }
+    
+    public function nftconf(){
+        return $this->hasOne(NftConfig::class, 'lv', 'lv');
+    }
 }

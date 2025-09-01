@@ -1,8 +1,8 @@
 <?php 
 return [
     'labels' => [
-        'UserJuj' => 'UserJuj',
-        'user-juj' => 'UserJuj',
+        'UserJuj' => 'JUJ日志',
+        'user-juj' => 'JUJ日志',
     ],
     'fields' => [
         'user_id' => '用户ID',

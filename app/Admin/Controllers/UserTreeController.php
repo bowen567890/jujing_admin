@@ -11,18 +11,18 @@ use Dcat\Admin\Widgets\Tab;
 use Dcat\Admin\Widgets\Card;
 use App\Models\User as UserModel;
 use App\Models\RankConfig;
+use App\Models\NftConfig;
 
 class UserTreeController extends AdminController
 {
     public $holdRankArr = [
         0 => '否',1 => '是'
     ];
-    public $rankArr = [];
-    public $nodeRankArr = [0=> '', 1=>'精英节点',2=>'核心节点',3=>'创世节点'];
+    public $nftRankArr = [];
     public function __construct()
     {
-        $rankArr = RankConfig::query()->orderBy('lv', 'asc')->pluck('name', 'lv')->toArray();
-        $this->rankArr = array_merge([0=>'V0'], $rankArr);
+        $nftRankArr = NftConfig::query()->orderBy('lv', 'asc')->pluck('name', 'lv')->toArray();
+        $this->nftRankArr = $nftRankArr;
     }
     
     public function index(Content $content)
@@ -35,30 +35,11 @@ class UserTreeController extends AdminController
 //            $grid->number();
             $grid->column('wallet')->tree();
             $grid->column('id','ID');
-            $grid->column('rank')->using($this->rankArr)->label('success');
-            $grid->column('node_rank', '节点等级')->using($this->nodeRankArr)->label('success');
-            $grid->column('code');
             $grid->column('usdt');
+            $grid->column('juj');
+            $grid->column('nft_rank', 'NFT等级')->using($this->nftRankArr)->label('success');
             $grid->column('zhi_num');
             $grid->column('group_num');
-            
-//             $grid->column('self_num');
-//             $grid->column('team_num');
-            $grid->column('total_num', '总单数')->help('个人+团队的单数');
-            $grid->column('yeji','业绩')->display(function (){
-                
-                $big_num = UserModel::query()->where('parent_id', $this->id)->orderBy('total_num', 'desc')->value('total_num');
-                $big_num = intval($big_num);
-                
-                $html = "";
-                $html .= "<div style='margin-top: 2px;'>个人单数：" . $this->self_num . "</div>";
-                $html .= "<div style='margin-top: 2px;'>团队单数：" . $this->team_num . "</div>";
-//                 $html .= "<div style='margin-top: 2px;'>总单数：" . $this->total_num . "</div>";
-                $html .= "<div style='margin-top: 2px;'>大区单数：" . $big_num . "</div>";
-                $html .= "<div style='margin-top: 2px;'>小区单数：" . $this->small_num . "</div>";
-                return $html;
-            });
-            
 
 //             $grid->column('small_num');
             

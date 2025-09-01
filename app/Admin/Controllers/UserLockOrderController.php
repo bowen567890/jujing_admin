@@ -10,31 +10,47 @@ use Dcat\Admin\Http\Controllers\AdminController;
 
 class UserLockOrderController extends AdminController
 {
-    /**
-     * Make a grid builder.
-     *
-     * @return Grid
-     */
+     public $statusArr = [
+        0=>'释放中',
+        1=>'已完结',
+    ];
+     public $sourceTypeArr = [
+         1=>'注册',
+         2=>'空投',
+     ];
     protected function grid()
     {
-        return Grid::make(new UserLockOrder(), function (Grid $grid) {
+        return Grid::make(UserLockOrder::with(['user']), function (Grid $grid) {
             $grid->column('id')->sortable();
             $grid->column('user_id');
-            $grid->column('status');
-            $grid->column('sign_date');
+            $grid->column('user.wallet', '用户地址');
+            $grid->column('status')->using($this->statusArr)->label();
+//             $grid->column('sign_date');
             $grid->column('total');
             $grid->column('wait_num');
             $grid->column('over_num');
+            $grid->column('actual_num', '实际获得');
             $grid->column('total_day');
             $grid->column('wait_day');
-            $grid->column('source_type');
-            $grid->column('ordernum');
+            $grid->column('source_type')->using($this->sourceTypeArr)->label();
+//             $grid->column('ordernum');
             $grid->column('created_at');
             $grid->column('updated_at')->sortable();
         
+            $grid->model()->orderBy('id','desc');
+            
+            $grid->disableCreateButton();
+            $grid->disableRowSelector();
+            $grid->disableDeleteButton();
+            $grid->disableActions();
+            $grid->scrollbarX();    			//滚动条
+            $grid->paginate(10);				//分页
+            
             $grid->filter(function (Grid\Filter $filter) {
-                $filter->equal('id');
-        
+                $filter->equal('user_id');
+                $filter->equal('user.wallet', '用户地址');
+                $filter->equal('status')->select($this->statusArr);
+                $filter->equal('source_type')->select($this->sourceTypeArr);
             });
         });
     }

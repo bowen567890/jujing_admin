@@ -1,8 +1,8 @@
 <?php 
 return [
     'labels' => [
-        'NftOrder' => 'NftOrder',
-        'nft-order' => 'NftOrder',
+        'NftOrder' => 'NFT买单',
+        'nft-order' => 'NFT买单',
     ],
     'fields' => [
         'user_id' => '用户ID',

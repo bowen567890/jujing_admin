@@ -1,8 +1,8 @@
 <?php 
 return [
     'labels' => [
-        'UserNftLog' => 'UserNftLog',
-        'user-nft-log' => 'UserNftLog',
+        'UserNftLog' => 'NFT日志',
+        'user-nft-log' => 'NFT日志',
     ],
     'fields' => [
         'user_id' => '用户ID',

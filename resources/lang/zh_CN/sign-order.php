@@ -1,8 +1,8 @@
 <?php 
 return [
     'labels' => [
-        'SignOrder' => 'SignOrder',
-        'sign-order' => 'SignOrder',
+        'SignOrder' => '签到日志',
+        'sign-order' => '签到日志',
     ],
     'fields' => [
         'user_id' => '用户ID',

@@ -11,4 +11,7 @@ class UserLockOrder extends Model
 	use HasDateTimeFormatter;
     protected $table = 'user_lock_order';
     
+    public function user(){
+        return $this->hasOne(User::class, 'id', 'user_id');
+    }
 }

@@ -7,65 +7,41 @@ use Dcat\Admin\Form;
 use Dcat\Admin\Grid;
 use Dcat\Admin\Show;
 use Dcat\Admin\Http\Controllers\AdminController;
+use App\Models\NftConfig;
 
 class UserNftStatController extends AdminController
 {
-    /**
-     * Make a grid builder.
-     *
-     * @return Grid
-     */
+    public $nftRankArr = [];
+    public function __construct()
+    {
+        $nftRankArr = NftConfig::query()->orderBy('lv', 'asc')->pluck('name', 'lv')->toArray();
+        $this->nftRankArr = $nftRankArr;
+    }
     protected function grid()
     {
-        return Grid::make(new UserNftStat(), function (Grid $grid) {
+        return Grid::make(UserNftStat::with(['user', 'nftconf']), function (Grid $grid) {
             $grid->column('id')->sortable();
             $grid->column('user_id');
-            $grid->column('lv');
+            $grid->column('user.wallet', '用户地址');
+            $grid->column('nftconf.name',  'NFT等级')->label();
             $grid->column('num');
-            $grid->column('created_at');
-            $grid->column('updated_at')->sortable();
+            
+            $grid->model()->orderBy('id','desc');
+            
+            $grid->disableCreateButton();
+            $grid->disableRowSelector();
+            $grid->disableDeleteButton();
+            $grid->disableActions();
+            $grid->scrollbarX();    			//滚动条
+            $grid->paginate(10);				//分页
         
             $grid->filter(function (Grid\Filter $filter) {
-                $filter->equal('id');
-        
+                $filter->equal('user_id');
+                $filter->equal('user.wallet', '用户地址');
+                $filter->equal('nftconf.lv',  'NFT等级')->select($this->nftRankArr);
             });
         });
     }
 
-    /**
-     * Make a show builder.
-     *
-     * @param mixed $id
-     *
-     * @return Show
-     */
-    protected function detail($id)
-    {
-        return Show::make($id, new UserNftStat(), function (Show $show) {
-            $show->field('id');
-            $show->field('user_id');
-            $show->field('lv');
-            $show->field('num');
-            $show->field('created_at');
-            $show->field('updated_at');
-        });
-    }
-
-    /**
-     * Make a form builder.
-     *
-     * @return Form
-     */
-    protected function form()
-    {
-        return Form::make(new UserNftStat(), function (Form $form) {
-            $form->display('id');
-            $form->text('user_id');
-            $form->text('lv');
-            $form->text('num');
-        
-            $form->display('created_at');
-            $form->display('updated_at');
-        });
-    }
+  
 }

@@ -17,21 +17,38 @@ class SignOrderController extends AdminController
      */
     protected function grid()
     {
-        return Grid::make(new SignOrder(), function (Grid $grid) {
+        return Grid::make(SignOrder::with(['user']), function (Grid $grid) {
             $grid->column('id')->sortable();
             $grid->column('user_id');
+            $grid->column('user.wallet', '用户地址');
             $grid->column('date');
             $grid->column('price');
             $grid->column('juj');
-            $grid->column('pay_type');
-            $grid->column('ordernum');
-            $grid->column('hash');
+//             $grid->column('pay_type');
+//             $grid->column('ordernum');
+            $grid->column('hash', '哈希')->display('点击查看') // 设置按钮名称
+            ->modal(function ($modal) {
+                // 设置弹窗标题
+                $modal->title('交易哈希');
+                // 自定义图标
+                return $this->hash;
+            });
             $grid->column('created_at');
-            $grid->column('updated_at')->sortable();
+//             $grid->column('updated_at')->sortable();
         
+            $grid->model()->orderBy('id','desc');
+            
+            $grid->disableCreateButton();
+            $grid->disableRowSelector();
+            $grid->disableDeleteButton();
+            $grid->disableActions();
+            $grid->scrollbarX();    			//滚动条
+            $grid->paginate(10);				//分页
+            
             $grid->filter(function (Grid\Filter $filter) {
-                $filter->equal('id');
-        
+                $filter->equal('user_id');
+                $filter->equal('user.wallet', '用户地址');
+                $filter->date('date');
             });
         });
     }

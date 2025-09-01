@@ -16,18 +16,18 @@ use App\Models\User as UserModel;
 use App\Models\RankConfig;
 use Dcat\Admin\Http\JsonResponse;
 use App\Models\ManageRankConfig;
+use App\Models\NftConfig;
 
 class UserController extends AdminController
 {
     public $holdRankArr = [
         0 => '否',1 => '是'
     ];
-    public $rankArr = [];
-    public $nodeRankArr = [0=> '', 1=>'精英节点',2=>'核心节点',3=>'创世节点'];
+    public $nftRankArr = [];
     public function __construct()
     {
-        $rankArr = RankConfig::query()->orderBy('lv', 'asc')->pluck('name', 'lv')->toArray();
-        $this->rankArr = array_merge([0=>'V0'], $rankArr);
+        $nftRankArr = NftConfig::query()->orderBy('lv', 'asc')->pluck('name', 'lv')->toArray();
+        $this->nftRankArr = $nftRankArr;
     }
     
     protected function grid()
@@ -46,46 +46,44 @@ class UserController extends AdminController
             $grid->column('parent.id','上级ID');
             $grid->column('code');
             $grid->column('usdt');
+            $grid->column('juj');
             
-            $grid->column('rank', '团队等级')->using($this->rankArr)->label('success');
-            $grid->column('hold_rank')
-            ->display(function () {
-                $arr = [
-                    0 => '否',
-                    1 => '是',
-                ];
-                $msg = $arr[$this->hold_rank];
-                $colour = $this->hold_rank == 1 ? '#4277cf' : 'gray';
-                return "<span class='label' style='background:{$colour}'>{$msg}</span>";
-            });
-          
-            $grid->column('node_rank', '节点等级')->using($this->nodeRankArr)->label('success');
-          
-            $grid->column('tuijian','团队')->display(function (){
-                $html = "";
-                $html .= "<div style='margin-top: 2px;'>直推人数：" . $this->zhi_num . "</div>";
-                $html .= "<div style='margin-top: 2px;'>团队人数：" . $this->group_num . "</div>";
-                $html .= "<div style='margin-top: 2px;'>直推有效：" . $this->zhi_valid . "</div>";
-                return $html;
-            });
-            
-            $grid->column('yeji','业绩')->display(function (){
+            $grid->column('nft_rank', 'NFT等级')->using($this->nftRankArr)->label('success');
+//             $grid->column('hold_rank')
+//             ->display(function () {
+//                 $arr = [
+//                     0 => '否',
+//                     1 => '是',
+//                 ];
+//                 $msg = $arr[$this->hold_rank];
+//                 $colour = $this->hold_rank == 1 ? '#4277cf' : 'gray';
+//                 return "<span class='label' style='background:{$colour}'>{$msg}</span>";
+//             });
+            $grid->column('zhi_num');
+            $grid->column('group_num');
+            $grid->column('total_sign');
+            $grid->column('continuous_sign')->display(function () 
+            {
+                $time = time();
+                $date = date('Y-m-d', $time);
+                $yDate = date('Y-m-d', strtotime(date('Y-m-d 00:00:00', $time))-3600);
                 
-                $big_num = UserModel::query()->where('parent_id', $this->id)->orderBy('total_num', 'desc')->value('total_num');
-                $big_num = intval($big_num);
-                
-                
-                $html = "";
-                $html .= "<div style='margin-top: 2px;'>个人单数：" . $this->self_num . "</div>";
-                $html .= "<div style='margin-top: 2px;'>团队单数：" . $this->team_num . "</div>";
-                $html .= "<div style='margin-top: 2px;'>大区单数：" . $big_num . "</div>";
-                $html .= "<div style='margin-top: 2px;'>小区单数：" . $this->small_num . "</div>";
-                return $html;
+                $last_sign_date = $this->last_sign_date;
+                $continuous_sign = $this->continuous_sign;
+                //今日日期不等最后签到日期
+                if ($last_sign_date!=$date) //最后签到时间不等于 今日日期
+                {
+                    //不等于昨天
+                    if ($last_sign_date!=$yDate)
+                    {
+                        $continuous_sign = 0;
+//                         $user->continuous_sign = 0;
+//                         $user->save();
+                    }
+                }
+                return $continuous_sign;
             });
             
-            
-//             $grid->column('achievement');
-//             $grid->column('achievement_ma');
 //             $grid->column('status','状态')->switch('',true);
 
             
@@ -141,7 +139,7 @@ class UserController extends AdminController
             });
             
             $grid->disableRowSelector();
-//             $grid->disableEditButton();
+            $grid->disableEditButton();
             $grid->disableViewButton();
             $grid->disableDeleteButton();
             $grid->disableCreateButton();
@@ -152,9 +150,7 @@ class UserController extends AdminController
                 $filter->equal('id');
                 $filter->equal('wallet');
 //                 $filter->equal('status','状态')->radio([0=>'禁用',1=>'有效']);
-                $filter->equal('rank', '团队等级')->select($this->rankArr);
-                $filter->equal('hold_rank')->select($this->holdRankArr);
-                $filter->equal('node_rank', '节点等级')->select($this->nodeRankArr);
+                $filter->equal('nft_rank')->select($this->nftRankArr);
                 $filter->between('created_at','注册时间')->datetime();
             });
         });

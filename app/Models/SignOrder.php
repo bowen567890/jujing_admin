@@ -11,7 +11,9 @@ class SignOrder extends Model
 	use HasDateTimeFormatter;
     protected $table = 'sign_order';
     
-    
+    public function user(){
+        return $this->hasOne(User::class, 'id', 'user_id');
+    }
     
     
     /**

@@ -7,22 +7,38 @@ use Dcat\Admin\Form;
 use Dcat\Admin\Grid;
 use Dcat\Admin\Show;
 use Dcat\Admin\Http\Controllers\AdminController;
+use App\Models\NftConfig;
 
 class UserNftController extends AdminController
 {
-    /**
-     * Make a grid builder.
-     *
-     * @return Grid
-     */
+    public $sourceTypeArr = [
+        1=>'注册赠送',
+        2=>'合成获得',
+        3=>'签到升级',
+        4=>'平台购买',
+        5=>'推荐获得',
+    ];
+    public $statusArr = [
+        1=>'仓库中',
+        2=>'已合成',
+        3=>'已升级',
+    ];
+    
+    public $nftRankArr = [];
+    public function __construct()
+    {
+        $nftRankArr = NftConfig::query()->orderBy('lv', 'asc')->pluck('name', 'lv')->toArray();
+        $this->nftRankArr = $nftRankArr;
+    }
+    
     protected function grid()
     {
-        return Grid::make(new UserNft(), function (Grid $grid) {
+        return Grid::make(UserNft::with(['user','nftconf']), function (Grid $grid) {
             $grid->column('id')->sortable();
             $grid->column('user_id');
-            $grid->column('target_id');
-            $grid->column('source_type');
-            $grid->column('lv');
+//             $grid->column('target_id');
+            $grid->column('source_type')->using($this->sourceTypeArr)->label('success');
+            $grid->column('nftconf.name',  'NFT等级')->label();
             $grid->column('status');
             $grid->column('upgrade_type');
             $grid->column('sign_date');
@@ -33,60 +49,10 @@ class UserNftController extends AdminController
             $grid->column('updated_at')->sortable();
         
             $grid->filter(function (Grid\Filter $filter) {
-                $filter->equal('id');
-        
+                $filter->equal('user_id');
+                $filter->equal('user.wallet', '用户地址');
+                $filter->equal('nftconf.lv',  'NFT等级')->select($this->nftRankArr);
             });
-        });
-    }
-
-    /**
-     * Make a show builder.
-     *
-     * @param mixed $id
-     *
-     * @return Show
-     */
-    protected function detail($id)
-    {
-        return Show::make($id, new UserNft(), function (Show $show) {
-            $show->field('id');
-            $show->field('user_id');
-            $show->field('target_id');
-            $show->field('source_type');
-            $show->field('lv');
-            $show->field('status');
-            $show->field('upgrade_type');
-            $show->field('sign_date');
-            $show->field('total_day');
-            $show->field('wait_day');
-            $show->field('over_day');
-            $show->field('created_at');
-            $show->field('updated_at');
-        });
-    }
-
-    /**
-     * Make a form builder.
-     *
-     * @return Form
-     */
-    protected function form()
-    {
-        return Form::make(new UserNft(), function (Form $form) {
-            $form->display('id');
-            $form->text('user_id');
-            $form->text('target_id');
-            $form->text('source_type');
-            $form->text('lv');
-            $form->text('status');
-            $form->text('upgrade_type');
-            $form->text('sign_date');
-            $form->text('total_day');
-            $form->text('wait_day');
-            $form->text('over_day');
-        
-            $form->display('created_at');
-            $form->display('updated_at');
         });
     }
 }
