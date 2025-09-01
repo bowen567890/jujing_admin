@@ -100,8 +100,8 @@ class SignController extends Controller
             $data['nft_sign']['total_day'] = $signNft->total_day;
             $data['nft_sign']['wait_day'] = $signNft->wait_day;
             $data['nft_sign']['over_day'] = $signNft->over_day;
-            $data['nft_sign']['this_nft'] = $NftConfig[$signNft->lv]['name'];
-            $data['nft_sign']['next_nft'] = $NftConfig[$NftConfig[$signNft->lv]['next_lv']]['name'];
+            $data['nft_sign']['this_nft'] = getNftName($signNft->lv);
+            $data['nft_sign']['next_nft'] = getNftName($NftConfig[$signNft->lv]['next_lv']);
         }
         
         $days_list = SignOrder::GetMonthListCache();

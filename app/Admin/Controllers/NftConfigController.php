@@ -56,6 +56,7 @@ class NftConfigController extends AdminController
                 return $arr[$lv];
             });
             $form->text('name')->required();
+            $form->text('name_en')->required();
             $form->radio('status')->required()->options($this->statusArr)->default(0);
             $form->number('price')->required()->min(0);
 //             $form->radio('upgrade_type')->required()->options($this->typeArr)->default(1);
@@ -71,7 +72,10 @@ class NftConfigController extends AdminController
             $form->number('stock')->min(0)->required();
 //             $form->text('sales');
             $form->image('image')->disk('admin')->uniqueName()->maxSize(10240)->accept('jpg,png,gif,jpeg')->autoUpload();
-        
+            
+            $form->editor('desc')->required()->disk('admin')->height('600');
+            $form->editor('desc_en')->required()->disk('admin')->height('600');
+            
             $form->saving(function (Form $form)
             {
                 $id = $form->getKey();

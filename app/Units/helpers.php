@@ -2,6 +2,7 @@
 
 use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Log;
+use App\Models\NftConfig;
 
 require __DIR__ . '/response.php';
 require __DIR__ . '/calculator.php';
@@ -540,6 +541,33 @@ function getRedeemDay($beginTime='')
     $diff = $time-$timeSteam;
     return intval($diff/86400);
 }
+
+
+function getLang() {
+    $txt = request()->header('lang', 'zh_CN');
+    $lang = '';
+    if (in_array($txt, ['tw','en','th','vi','ko','ja'])) {
+        $lang = '_'.$txt;
+    }
+    return $lang;
+}
+
+function getNftName($lv=0, $NftConfig=[]) 
+{
+    if (!$NftConfig) {
+        $NftConfig = NftConfig::GetListCache();
+    }
+    $NftConfig = array_column($NftConfig, null, 'lv');
+    
+    $lang = getLang();
+    $nameField = 'name'.$lang;
+//     $descField = 'desc'.$lang;
+    $name = isset($NftConfig[$lv][$nameField]) ? $NftConfig[$lv][$nameField] : '';
+    
+    return $name;
+}
+
+
 
 
 

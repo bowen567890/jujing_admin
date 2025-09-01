@@ -56,7 +56,8 @@ class UserController extends Controller
         $data['code'] = $user->code;
         $data['usdt'] = $user->usdt;
         $data['juj'] = $user->usdt;
-        $data['nft_rank'] = $user->nft_rank;
+//         $data['nft_rank'] = $user->nft_rank;
+        $data['nft_rank'] = getNftName($user->nft_rank);
         $data['zhi_num'] = $user->zhi_num;
         $data['group_num'] = $user->group_num;
         
@@ -168,53 +169,6 @@ class UserController extends Controller
         if ($list) {
             foreach ($list as &$v) {
                 $v['content'] = $v['msg'] = __("error.JUJ类型{$v['cate']}");
-            }
-        }
-        return responseJson($list);
-    }
-    
-    public function ticketList(Request $request)
-    {
-        $user = auth()->user();
-        $in = $request->input();
-        
-        $pageNum = isset($in['page_num']) && intval($in['page_num'])>0 ? intval($in['page_num']) : 10;
-        $page = isset($in['page']) ? intval($in['page']) : 1;
-        $page = $page<=0 ? 1 : $page;
-        $offset = ($page-1)*$pageNum;
-        
-        $user_id = $user->id;
-//         if ($user_id==5) {
-//             $user_id = 15;
-//         }
-        
-        $where['ut.user_id'] = $user_id;
-        
-        if (isset($in['status']) && is_numeric($in['status']) && in_array($in['status'], [0,1,2])) {
-            $where['ut.status'] = $in['status'];
-        }
-        
-        $list = TicketConfig::query()
-            ->join('user_ticket as ut', 'ticket_config.id', '=', 'ut.ticket_id')
-            ->where($where)
-            ->orderBy('ut.status', 'asc')
-            ->orderBy('ut.id', 'desc')
-            ->offset($offset)
-            ->limit($pageNum)
-            ->get([
-                'ut.id','ut.user_id','ut.from_uid','ut.ticket_id','ut.status','ut.source_type','ut.ordernum',
-                'ticket_config.ticket_price','ticket_config.insurance','ut.created_at'
-            ])
-            ->toArray();
-        if ($list) 
-        {
-            foreach ($list as &$v) 
-            {
-                $v['can_transfer'] = 0;
-                if ($v['status']==0 && $v['source_type']==2) 
-                {
-                    $v['can_transfer'] = 1;
-                }
             }
         }
         return responseJson($list);

@@ -42,12 +42,16 @@ class NftController extends Controller
         
         $list = NftConfig::query()
             ->get([
-                'lv','name','status','price','upgrade_type','upgrade_value','next_lv',
-                'fee_rate','profit_rate','gas_add_rate','stock','image'
+                'lv','name','name_en','status','price','upgrade_type','upgrade_value','next_lv',
+                'fee_rate','profit_rate','gas_add_rate','stock','image','desc','desc_en'
             ])
             ->toArray();
         if ($list) 
         {
+            $lang = getLang();
+            $nameField = 'name'.$lang;
+            $descField = 'desc'.$lang;
+            
             foreach ($list as &$val) 
             {
                 $val['image'] = getImageUrl($val['image']);
@@ -61,6 +65,10 @@ class NftController extends Controller
                 
                 $gas_add_rate = $val['gas_add_rate']*100;
                 $val['gas_add_rate'] = $gas_add_rate.'%';
+                
+                $val['name'] = isset($val[$nameField]) ? $val[$nameField] : '';
+                $val['desc'] = isset($val[$descField]) ? $val[$descField] : '';
+                unset($val['name_en'],$val['desc_en']);
             }
         }
         
@@ -188,6 +196,13 @@ class NftController extends Controller
             ->limit($pageNum)
             ->get()
             ->toArray();
+        
+        if ($list) {
+            foreach ($list as &$val) {
+                $val['name'] = getNftName($val['lv']);
+            }
+        }
+            
         return responseJson($list);
     }
     
@@ -210,7 +225,7 @@ class NftController extends Controller
             foreach ($list as &$val) 
             {
                 $conf = $NftConfig[$val['lv']];
-                $val['name'] = $conf['name'];
+                $val['name'] = getNftName($val['lv'], $NftConfig);
                 $val['image'] = getImageUrl($conf['image']);
             }
         }
@@ -349,13 +364,13 @@ class NftController extends Controller
         
         if ($list)
         {
-            $NftConfig = NftConfig::GetListCache();
-            $NftConfig = array_column($NftConfig, null, 'lv');
+//             $NftConfig = NftConfig::GetListCache();
+//             $NftConfig = array_column($NftConfig, null, 'lv');
             
             foreach ($list as &$val)
             {
-                $conf = $NftConfig[$val['lv']];
-                $val['name'] = $conf['name'];
+                $val['name'] = getNftName($val['lv']);
+                $val['content'] = $val['msg'] = __("error.NFT类型{$v['cate']}");
 //                 $val['image'] = getImageUrl($conf['image']);
             }
         }

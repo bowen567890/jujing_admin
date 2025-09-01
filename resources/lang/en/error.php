@@ -58,22 +58,31 @@ return [
     '订单已赎回' => 'Order redeemed',
     '入场券状态已更新' => 'The status of the admission ticket has been updated',
     
-    //分类1系统增加2系统扣除3余额提币4提币驳回5余额充值6购买入场券7支付保证金8赎回保证金9开通节点12直推奖励13层级奖励14静态奖励15等级奖励16精英分红17核心分红18创世分红19排名分红
+    '此NFT不可合成升级' => 'This NFT cannot be synthesized and upgraded',
+    'NFT数量不足' => 'Insufficient number of NFTs',
+    '今日已签到' => 'Signed in today',
+    
+    //分类1系统增加2系统扣除3余额提币4提币驳回5团队返利GAS
     'USDT类型1' => 'System increase',
     'USDT类型2' => 'System deduction',
     'USDT类型3' => 'Balance withdrawal',
     'USDT类型4' => 'Withdrawal rejection',
-    'USDT类型5' => 'Balance Recharge',
-    'USDT类型6' => 'Purchase Ticket',
-    'USDT类型7' => 'Pay Security Deposit',
-    'USDT类型8' =>'Redeem Security Deposit',
-    'USDT类型9' =>'Open Node',
-    'USDT类型12' =>'Direct Referral Rewards',
-    'USDT类型13' =>'Tier Rewards',
-    'USDT类型14' =>'Static Rewards',
-    'USDT类型15' =>'Level Rewards',
-    'USDT类型16' =>'Elite Dividends',
-    'USDT类型17' =>'Core Dividends',
-    'USDT类型18' =>'Genesis Dividends',
-    'USDT类型19' =>'Ranking Dividends',
+    'USDT类型5' => 'Team rebate GAS',
+    
+    //分类1系统增加2系统扣除3余额提币4提币驳回5锁仓释放6推荐奖励
+    'JUJ类型1' => 'System increase',
+    'JUJ类型2' => 'System deduction',
+    'JUJ类型3' => 'Balance withdrawal',
+    'JUJ类型4' => 'Withdrawal rejection',
+    'JUJ类型5' => 'Lock release',
+    'JUJ类型6' => 'Referral Bonus',
+    
+    //来源1注册赠送2合成获得3签到获得4平台购买5推荐获得6合成扣除7签到扣除
+    'NFT类型1' => 'Registration gift',
+    'NFT类型2' => 'Obtained through synthesis',
+    'NFT类型3' => 'Sign in to obtain',
+    'NFT类型4' => 'Platform purchase',
+    'NFT类型5' => 'Recommended to obtain',
+    'NFT类型6' => 'Composite deduction',
+    'NFT类型7' => 'Check in deduction',
 ];

@@ -33,6 +33,7 @@ use App\Models\IgniteOrder;
 use App\Models\SignConfig;
 use App\Models\UserRankingDay;
 use App\Models\PoolConfig;
+use App\Models\NftConfig;
 
 class IndexController extends Controller
 {
@@ -49,8 +50,45 @@ class IndexController extends Controller
         $in = $request->input();
         $user = auth()->user();
         $data['wallet'] = $user->wallet;
-        $data['telegram_group_link'] = config('telegram_group_link');
-        $data['nadi_group_link'] = config('nadi_group_link');
+        $data['code'] = $user->code;
+        $data['zhi_num'] = $user->zhi_num;
+        $data['group_num'] = $user->group_num;
+        
+        
+        $nft_list = NftConfig::query()
+            ->where('status', 1)
+            ->get([
+                'lv','name','name_en','status','price','upgrade_type','upgrade_value','next_lv',
+                'fee_rate','profit_rate','gas_add_rate','stock','image','desc','desc_en'
+            ])
+            ->toArray();
+        if ($nft_list)
+        {
+            $lang = getLang();
+            $nameField = 'name'.$lang;
+            $descField = 'desc'.$lang;
+            
+            foreach ($nft_list as &$val)
+            {
+                $val['image'] = getImageUrl($val['image']);
+                $val['stock'] = $val['stock']<=0 ? 0 : $val['stock'];
+                
+                $fee_rate = $val['fee_rate']*100;
+                $val['fee_rate'] = $fee_rate.'%';
+                
+                $profit_rate = $val['profit_rate']*100;
+                $val['profit_rate'] = $profit_rate.'%';
+                
+                $gas_add_rate = $val['gas_add_rate']*100;
+                $val['gas_add_rate'] = $gas_add_rate.'%';
+                
+                $val['name'] = isset($val[$nameField]) ? $val[$nameField] : '';
+                $val['desc'] = isset($val[$descField]) ? $val[$descField] : '';
+                unset($val['name_en'],$val['desc_en']);
+            }
+        }
+        $data['nft_list'] = $nft_list;
+        
         return responseJson($data);
     }
     
