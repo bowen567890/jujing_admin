@@ -28,7 +28,7 @@ class Kernel extends ConsoleKernel
         //查询代币价格
         $schedule->command('sync:tokenprice')->cron('*/2 * * * *');
         //检查昨日签到
-        $schedule->command('CheckSign')->cron('0 0 * * *');
+        $schedule->command('CheckYdaySign')->cron('0 0 * * *');
         //手续费分红
 //         $schedule->command('FeeDividend')->cron('5 0 * * *');
         
