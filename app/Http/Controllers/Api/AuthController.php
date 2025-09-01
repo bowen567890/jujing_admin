@@ -68,47 +68,9 @@ class AuthController extends Controller
         }
         
         $user = User::query()->where('wallet', $wallet)->first(['id']);
-        if (!$user)
-        {
-            if (!isset($in['code']) || !$in['code']){
-                $MyRedis->del_lock($lockKey);
-                return responseValidateError(__('error.请通过邀请链接注册登录'));
-            }
-            $code = trim($in['code']);
-            $parent = User::query()->where('code', $code)->select('id','wallet','path','level')->first();
-            if (!$parent || !$parent->wallet){
-                $MyRedis->del_lock($lockKey);
-                return responseValidateError(__('error.推荐人不存在'));
-            }
-            
-//             $http = new Client();
-            DB::beginTransaction();
-            try
-            {
-                $validated['parent_id'] = $parent->id;
-                $validated['wallet'] = $wallet;
-                $validated['path'] = empty($parent->path) ? '-'.$parent->id.'-' : $parent->path.$parent->id.'-';
-                $validated['level'] = $parent->level+1;
-                $validated['headimgurl'] = 'headimgurl/default.jpg';
-                $user = User::create($validated);
-                
-                //注册赠送算力
-                $register_gift_power = intval(config('register_gift_power'));
-                if ($register_gift_power>0) {
-                    $userModel = new User();
-                    $cate = ['cate'=>3, 'msg'=>'注册赠送', 'ordernum'=>get_ordernum()];
-                    $userModel->handleUser('power', $user->id, $register_gift_power, 1, $cate);
-                }
-                
-                DB::commit();
-            }
-            catch (\Exception $e)
-            {
-                DB::rollBack();
-                $MyRedis->del_lock($lockKey);
-                //                         var_dump($e->getMessage().$e->getLine());die;
-                return responseValidateError(__('error.系统维护'));
-            }
+        if (!$user) {
+            $MyRedis->del_lock($lockKey);
+            return responseValidateError(__('error.请通过邀请链接注册登录'));
         }
         
         $token = 'Bearer '.JWTAuth::fromUser($user);
