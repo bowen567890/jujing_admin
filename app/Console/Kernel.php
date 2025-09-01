@@ -26,7 +26,7 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         //查询代币价格
-//         $schedule->command('sync:tokenprice')->cron('*/2 * * * *');
+        $schedule->command('sync:tokenprice')->cron('*/2 * * * *');
         //保证金订单释放
         $schedule->command('CheckSign')->cron('0 0 * * *');
         

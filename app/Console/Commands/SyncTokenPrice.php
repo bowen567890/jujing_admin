@@ -29,7 +29,7 @@ class SyncTokenPrice extends Command
     public function handle()
     {
         $list = MainCurrency::query()
-            ->where('id', '<>', 1)   //1USDT2MH3VV4BNB
+            ->where('id', '<>', 1)   //1USDT2BNB
             ->where('is_sync', '=', 1)
             ->orderBy('id', 'desc')
             ->get(['id','contract_address','contract_address_lp','pancake_cate'])
@@ -44,7 +44,7 @@ class SyncTokenPrice extends Command
             foreach ($list as $val)
             {
                 //不是SPACEX
-                if (!in_array($val['id'], [2])) 
+                if (!in_array($val['id'], [1])) 
                 {
                     try
                     {
@@ -91,22 +91,6 @@ class SyncTokenPrice extends Command
                         Log::channel('lp_info')->info('查询LP信息V2失败', ['error_msg'=>$e->getMessage().$e->getLine()]);
                     }
                 } 
-                else 
-                {
-                    //SPACEX价格路径  VV->WBNB->USDT
-                    if ($val['id']==2) 
-                    {
-                        $coin_price = $this->getSpacexPrice2();
-                        if (bccomp($coin_price, '0', 10)<=0) {
-                            $coin_price = $this->getSpacexPrice1();
-                        }
-                        if (bccomp($coin_price, '0', 10)>0) {
-                            MainCurrency::query()->where('id', $val['id'])->update(['rate'=>$coin_price,'is_success'=>1]);
-                        } else {
-                            MainCurrency::query()->where('id', $val['id'])->update(['is_success'=>0]);
-                        }
-                    }
-                }
             }
         }
     }
