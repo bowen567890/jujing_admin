@@ -84,6 +84,8 @@ class CheckYdaySign extends Command
                         $lup['over_num'] = bcadd($lval['over_num'], $outNum, 6);
                         UserLockOrder::query()->where('id', $lval['id'])->update($lup);
                         
+                        User::query()->where('id', $lval['user_id'])->decrement('juj_lock', $outNum);
+                        
                         if (bccomp($outNum, '0', 6)>0)
                         {
                             $destroyNum = bcmul($outNum, $destroy_rate, 6);

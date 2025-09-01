@@ -7,6 +7,7 @@ use Dcat\Admin\Form;
 use Dcat\Admin\Grid;
 use Dcat\Admin\Show;
 use Dcat\Admin\Http\Controllers\AdminController;
+use App\Admin\Actions\Grid\AddLockOrder;
 
 class UserLockOrderController extends AdminController
 {
@@ -21,6 +22,9 @@ class UserLockOrderController extends AdminController
     protected function grid()
     {
         return Grid::make(UserLockOrder::with(['user']), function (Grid $grid) {
+            
+            $grid->tools(new AddLockOrder());
+            
             $grid->column('id')->sortable();
             $grid->column('user_id');
             $grid->column('user.wallet', '用户地址');
