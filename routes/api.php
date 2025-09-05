@@ -84,6 +84,7 @@ Route::namespace('App\Http\Controllers\Api')->group(function (){
             
             Route::prefix('nft')->group(function (){
                 Route::post('config','NftController@config');
+                Route::post('conflateConfig','NftController@conflateConfig');
                 Route::post('buy','NftController@buy');
                 Route::post('buyLog','NftController@buyLog');
                 Route::post('nftLog','NftController@nftLog');

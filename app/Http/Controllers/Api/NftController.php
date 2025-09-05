@@ -68,12 +68,57 @@ class NftController extends Controller
                 
                 $val['name'] = isset($val[$nameField]) ? $val[$nameField] : '';
                 $val['desc'] = isset($val[$descField]) ? $val[$descField] : '';
+                
+                
+                
                 unset($val['name_en'],$val['desc_en']);
             }
         }
         
         return responseJson($list);
     }
+    
+    public function conflateConfig(Request $request)
+    {
+        $user = auth()->user();
+        
+        
+        $NftConfig = NftConfig::GetListCache();
+        $NftConfig = array_column($NftConfig, null, 'lv');
+        
+        $list = [];
+        $lang = getLang();
+        $nameField = 'name'.$lang;
+        $descField = 'desc'.$lang;
+        
+        foreach ($NftConfig as $val) 
+        {
+            if ($val['next_lv']>0 && isset($NftConfig[$val['next_lv']])) 
+            {
+                $next_nft = $NftConfig[$val['next_lv']];
+                if ($val['upgrade_type']==2) {
+                    if (!isset($list[$next_nft['lv']])) 
+                    {
+                        $hold_num = UserNftStat::query()->where('user_id', $user->id)->where('lv', $val['lv'])->value('num');
+                        $hold_num = intval($hold_num);
+                        
+                        $list[] = [
+                            'lv' => $next_nft['lv'],
+                            'name' => isset($next_nft[$nameField]) ? $next_nft[$nameField] : '',
+                            'image' => getImageUrl($next_nft['image']),
+                            'need_lv' => $val['lv'],
+                            'need_num' => $val['upgrade_value'],
+                            'need_name' => isset($val[$nameField]) ? $val[$nameField] : '',
+                            'is_can' => $hold_num>=$val['upgrade_value'] ? 1 : 0
+                        ];
+                    }
+                }
+            }
+        }
+        
+        return responseJson($list);
+    }
+    
     
     /**
      * 购买NFT
