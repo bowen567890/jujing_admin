@@ -35,6 +35,8 @@ use App\Models\UserPoint;
 use App\Models\UserTicket;
 use App\Models\TicketConfig;
 use App\Models\UserJuj;
+use App\Models\UserNftStat;
+use App\Models\TeamGasConfig;
 
 class UserController extends Controller
 {
@@ -56,6 +58,7 @@ class UserController extends Controller
         $data['code'] = $user->code;
         $data['usdt'] = $user->usdt;
         $data['juj'] = $user->usdt;
+        $data['juj_lock'] = $user->juj_lock;
 //         $data['nft_rank'] = $user->nft_rank;
         $data['nft_rank'] = getNftName($user->nft_rank);
         $data['zhi_num'] = $user->zhi_num;
@@ -66,8 +69,45 @@ class UserController extends Controller
         $withdraw_fee_bnb = @bcadd(config('withdraw_fee_bnb'), '0', 6);
         $withdraw_fee_bnb = bccomp($withdraw_fee_bnb, '0', 6)>0 ? $withdraw_fee_bnb : '0.0015';
         $data['withdraw_fee_bnb'] = $withdraw_fee_bnb;
+        
+        
+        $nft_num = UserNftStat::query()->where('user_id', $user->id)->sum('num');
+        $data['nft_num'] = intval($nft_num);
+        
+        $total_income_juj = UserJuj::query()
+            ->where('user_id', $user->id)
+            ->whereIn('cate', [5,6])
+            ->sum('total');
+        $data['total_income_juj'] = @bcadd($total_income_juj, '0', 4);
+        
+        $today_income_juj = UserJuj::query()
+            ->where('user_id', $user->id)
+            ->whereIn('cate', [5,6])
+            ->whereDate('created_at',date('Y-m-d'))
+            ->sum('total');
+        $data['today_income_juj'] = @bcadd($today_income_juj, '0', 4);
+        
+        $data['wait_dividend'] = 0;
+        
+        $gas_rate = TeamGasConfig::GetGasRate($user->zhi_num);
+        $data['gas_rate'] = $gas_rate*100;
+        
+        
+        
         return responseJson($data);
     }
+    
+    public function teamGasConfig(Request $request)
+    {
+        $list = TeamGasConfig::GetListCache();
+        if ($list) {
+            foreach ($list as &$val) {
+                $val['gas_rate'] = $val['gas_rate']*100;
+            }
+        }
+        return responseJson($list);
+    }
+    
     
     public function teamList(Request $request)
     {

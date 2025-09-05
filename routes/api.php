@@ -70,6 +70,7 @@ Route::namespace('App\Http\Controllers\Api')->group(function (){
             Route::prefix('user')->group(function ()
             {
                 Route::post('info','UserController@info');
+                Route::post('teamGasConfig','UserController@teamGasConfig');
                 Route::post('teamList','UserController@teamList');
                 Route::post('usdtLog','UserController@usdtLog');
                 Route::post('jujLog','UserController@jujLog');
