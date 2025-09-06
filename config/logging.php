@@ -255,7 +255,12 @@ return [
             'channels' => ['single'],
             'ignore_exceptions' => false,
         ],
-        
+        'signLog' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/signLog.log'),
+            'channels' => ['single'],
+            'ignore_exceptions' => false,
+        ],
         
     ],
 
